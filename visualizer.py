@@ -14,7 +14,7 @@ import pygame
 # Fear not, for this will be properly commented.
 # Waiting to document until after we refactor for the Arduino serial interface.
 
-music_name = 'Country' if len(sys.argv) < 2 else sys.argv[1]
+music_name = 'Abba' if len(sys.argv) < 2 else sys.argv[1]
 start_time = 0 if len(sys.argv) < 3 else float(sys.argv[2])
 
 font_path = 'Arial Rounded MT Bold.ttf'  # TODO: custom font
@@ -26,7 +26,7 @@ with open('wordsearch.txt') as f:
 df_solutions = pd.read_csv('wordsearch_solution.csv').set_index('word')
 
 width, height = 600, 600
-x_count, y_count = 25, 25
+x_count, y_count = 30, 30
 
 # x_count, y_count = np.array(wordsearch.shape)[::-1]
 grid_size = 600 / x_count
@@ -81,7 +81,7 @@ frequencies_index_ratio = len(frequencies) / frequencies[-1]
 times = librosa.core.frames_to_time(np.arange(spectrogram.shape[1]), sr=sr, hop_length=hop_length, n_fft=n_fft)
 time_index_ratio = len(times) / times[len(times) - 1]
 
-show_letters = True
+show_letters = False
 show_timestamp = True
 
 
