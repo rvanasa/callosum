@@ -1,5 +1,9 @@
 # C A L L O S U M
 
+#### Reese Turney & Ryan Vandersmith
+
+Discover why your brain loves the music you choose.
+
 ## Research Notebooks
 
 - [Feature visualization & normalization](https://colab.research.google.com/drive/1-VmrEH0rXGvLicN42oUaHNJ9iAtdiNvi?usp=sharing)
