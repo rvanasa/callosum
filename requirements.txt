@@ -1,0 +1,9 @@
+numpy==1.21
+pandas
+pygame
+soundfile
+python-dotenv
+google-cloud-speech
+librosa
+numba
+spotipy

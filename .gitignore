@@ -1,0 +1,9 @@
+.idea
+.cache
+.env.local
+__pycache__
+/venv
+/music
+/music_cache
+/output
+google_cloud_key.json
