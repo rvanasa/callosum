@@ -14,10 +14,14 @@ import pygame
 # Fear not, for this will be properly commented.
 # Waiting to document until after we refactor for the Arduino serial interface.
 
-music_name = 'Abba' if len(sys.argv) < 2 else sys.argv[1]
+pixels_per_letter = 2
+
+music_name = 'Starman' if len(sys.argv) < 2 else sys.argv[1]
 start_time = 0 if len(sys.argv) < 3 else float(sys.argv[2])
 
-font_path = 'Arial Rounded MT Bold.ttf'  # TODO: custom font
+music_format = 'wav'
+
+font_path = 'Arial Rounded MT Bold'  # TODO: custom font
 
 with open('wordsearch.txt') as f:
     lines = list(f.readlines())
@@ -50,7 +54,7 @@ if not os.path.exists(cache_dir):
 if not os.path.exists(cache_subdir):
     os.mkdir(cache_subdir)
 
-music_path = f'{music_dir}/{music_name}.ogg'
+music_path = f'{music_dir}/{music_name}.{music_format}'
 spectrogram_path = f'{cache_subdir}/{music_name}.npy'
 if os.path.exists(spectrogram_path):
     spectrogram = np.load(spectrogram_path)
@@ -70,7 +74,7 @@ else:
 df_features = pd.read_csv('music_features.csv').set_index('name').astype(float)
 features = df_features.loc[music_name if music_name in df_features.index else 'default']
 
-lyrics_path = music_path.replace('.ogg', '.csv')
+lyrics_path = music_path.replace(f'.{music_format}', '.csv')
 lyrics = [row for _, row in pd.read_csv(lyrics_path).sort_values('start').iterrows()] \
     if os.path.exists(lyrics_path) else []
 # lyrics = []
@@ -108,6 +112,8 @@ def get_decibel_range(spectrum, min_freq, max_freq, n_chunks=None):
 def main():
     global show_letters
     pygame.init()
+    pygame.display.set_icon(pygame.image.load('assets/icon.png'))
+    pygame.display.set_caption(music_name)
     screen = pygame.display.set_mode([width, height])
     time_font = pygame.font.SysFont(font_path, 24)  ####
 
@@ -213,21 +219,26 @@ def main():
             for x in xs:
                 if show_timestamp and x < 1 and y < 1:
                     continue
-                letter = wordsearch[y, x] if x < wordsearch.shape[0] and y < wordsearch.shape[1] else ''
+                letter = (
+                    # wordsearch[y * pixels_per_letter, x * pixels_per_letter]
+                    wordsearch[y, x]
+                    if x < wordsearch.shape[0] and y < wordsearch.shape[1] else ''
+                )
                 xy_color = next_grid[x, y].astype(int)
-                if text is not None and solution is not None:
-                    flag = True
-                    for i in range(len(text)):
-                        if y == solution.x + solution.dx * i and x == solution.y + solution.dy * i:
-                            flag = False
-                            break
-                    if flag:
-                        xy_color = (0, 0, 0)
                 if show_letters:
+                    # xy_color = next_grid[x * pixels_per_letter, y * pixels_per_letter].astype(int)  ##
+                    if text is not None and solution is not None:
+                        flag = True
+                        for i in range(len(text)):
+                            if y == solution.x + solution.dx * i and x == solution.y + solution.dy * i:
+                                flag = False
+                                break
+                        if flag:
+                            xy_color = (0, 0, 0)
                     img = ws_font.render(letter, True, xy_color)
                     screen.blit(img, (
-                        col_xs[x] + (grid_size - img.get_width()) / 2,
-                        row_ys[y] + (grid_size - img.get_height()) / 2,
+                        col_xs[x] * pixels_per_letter + (grid_size * pixels_per_letter - img.get_width()) / 2,
+                        row_ys[y] * pixels_per_letter + (grid_size * pixels_per_letter - img.get_height()) / 2,
                     ))
                 else:
                     screen.fill(xy_color, rectangles[x, y])
