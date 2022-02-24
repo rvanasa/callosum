@@ -8,4 +8,5 @@ librosa
 numba
 spotipy
 youtube_dl
+pydub
 # ffmpeg-python

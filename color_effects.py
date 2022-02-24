@@ -32,18 +32,23 @@ def choose_colors(color_grid, xis, yis, xcs, ycs, angles, radii, spectrum, get_d
         # offset -= abs(features.danceability) * offset_rate * .2  #####
     last_freqs = freqs
 
-    for xi, yi, x, y, angle, r in zip(xis, yis, xcs, ycs, angles, radii):
-        color_grid[xi, yi] = choose_color(x, y, angle, r, freqs, features)
+    # Optimized parameters
+    A = .8 + np.cos(offset * 1.5) * .2
+    B = np.sin(offset * 10)
+    C = np.sin(offset * 5)
+
+    for xi, yi, angle, r in zip(xis, yis, angles, radii):
+        color_grid[xi, yi] = choose_color(angle, r, freqs, features, A, B, C)
 
     color_grid **= (2 + features.liveness * .5)  ###
 
 
-def choose_color(x, y, angle, r, freqs, features):
+def choose_color(angle, r, freqs, features, A, B, C):
     # offset = _globals['offset']  #####
 
-    spokes = min(6, int(max(0, 1 + features.energy * 10)))
+    spokes = min(6, int(max(0, 1 + features.energy * 5)))
 
-    r += np.sin((angle * spokes + offset * 5) * 2 * np.pi) * .2  ####
+    r += np.sin((angle * spokes + offset * 5) * 2 * np.pi) * .2 * A  ####
 
     # af = freqs[min(int(angle * len(freqs)), len(freqs) - 1)]
     rf = freqs[min(int(r * len(freqs)), len(freqs) - 1)]
@@ -51,8 +56,8 @@ def choose_color(x, y, angle, r, freqs, features):
     # yf = freqs[min(int(abs(y) * len(freqs)), len(freqs) - 1)]
 
     # hue = angle - (offset + r) * .2  ####
-    hue = (300 + np.clip(features.valence, -1, 1) * 120 + np.sin(offset * 10) * 20) / 360  ####
-    sat = r * .75 + np.sin(offset * 5) * .1  # * (.75 + features.valence * 1)
+    hue = (300 + np.clip(features.valence, -1, 1) * 120 + B * 20) / 360  ####
+    sat = r * .75 + C * .1  # * (.75 + features.valence * 1)
     val = rf ** (2 + features.danceability * .5) + np.sin((angle * 3 + offset * 2) * 2 * np.pi) ** 2 * .1
 
     # if(rf):

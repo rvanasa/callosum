@@ -2,8 +2,7 @@ import os
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = './google_cloud_key.json'
 
-import autosub
-
+# import autosub
 
 
 # import os

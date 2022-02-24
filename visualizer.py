@@ -1,3 +1,5 @@
+import prelude
+
 import sys
 import os
 import librosa
@@ -5,6 +7,7 @@ import numpy as np
 import pandas as pd
 import itertools as it
 from numba import jit
+import warnings
 
 from color_effects import choose_colors
 
@@ -19,9 +22,9 @@ pixels_per_letter = 2
 music_name = 'Starman' if len(sys.argv) < 2 else sys.argv[1]
 start_time = 0 if len(sys.argv) < 3 else float(sys.argv[2])
 
-music_format = 'wav'
+music_format = 'mp3'
 
-font_path = 'Arial Rounded MT Bold'  # TODO: custom font
+font_path = 'Arial Rounded MT Bold'  # TODO: custom font?
 
 with open('wordsearch.txt') as f:
     lines = list(f.readlines())
@@ -42,9 +45,9 @@ hop_length = 512
 n_fft = 1024 * 4
 sr = 10000
 
-dampen = .005
+dampen = .01
 min_brightness = 0
-audio_time_offset = .08
+audio_time_offset = .09
 
 music_dir = 'music'
 cache_dir = f'music_cache'
@@ -60,9 +63,9 @@ if os.path.exists(spectrogram_path):
     spectrogram = np.load(spectrogram_path)
 else:
     print('Loading music...')
-    # with warnings.catch_warnings():
-    #     warnings.simplefilter('ignore')
-    data, sr = librosa.load(music_path, sr=sr)  # , duration=30
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        data, sr = librosa.load(music_path, sr=sr)  # , duration=30
 
     print('Computing STFT...')
     stft = np.abs(librosa.stft(data, hop_length=hop_length, n_fft=n_fft))
@@ -71,7 +74,7 @@ else:
     spectrogram = librosa.amplitude_to_db(stft, ref=np.max)
     np.save(spectrogram_path, spectrogram)
 
-df_features = pd.read_csv('music_features.csv').set_index('name').astype(float)
+df_features = pd.read_csv('music_features.csv').set_index('name')
 features = df_features.loc[music_name if music_name in df_features.index else 'default']
 
 lyrics_path = music_path.replace(f'.{music_format}', '.csv')
@@ -86,7 +89,7 @@ times = librosa.core.frames_to_time(np.arange(spectrogram.shape[1]), sr=sr, hop_
 time_index_ratio = len(times) / times[len(times) - 1]
 
 show_letters = False
-show_timestamp = True
+show_timestamp = False
 
 
 @jit(nopython=True)
@@ -110,10 +113,10 @@ def get_decibel_range(spectrum, min_freq, max_freq, n_chunks=None):
 
 
 def main():
-    global show_letters
+    global show_letters, start_time
     pygame.init()
     pygame.display.set_icon(pygame.image.load('assets/icon.png'))
-    pygame.display.set_caption(music_name)
+    pygame.display.set_caption(f'C A L L O S U M  |  {features.artist} - {features.song}')
     screen = pygame.display.set_mode([width, height])
     time_font = pygame.font.SysFont(font_path, 24)  ####
 
@@ -121,7 +124,7 @@ def main():
     ws_font = pygame.font.SysFont(font_path, ws_size)  ####
 
     grid_width, grid_height = width // x_count, height // y_count
-    grid_margin = 2
+    grid_margin = 4
 
     xs, ys = np.arange(y_count), np.arange(x_count)
     row_ys, col_xs = np.arange(y_count) * grid_height, np.arange(x_count) * grid_width
@@ -152,8 +155,8 @@ def main():
     color_grid = np.ones((x_count, y_count, 3), dtype=float)
     energy_grid = np.ones((x_count, y_count), dtype=float)
 
-    x_center = 2 * col_xs / width - 1
-    y_center = 2 * row_ys / height - 1
+    # x_center = 2 * col_xs / width - 1
+    # y_center = 2 * row_ys / height - 1
     # radius_grid = np.sqrt(x_center ** 2 + y_center ** 2)
 
     next_grid = np.zeros(color_grid.shape)
@@ -163,7 +166,7 @@ def main():
     running = True
     while running:
         ticks = pygame.time.get_ticks()
-        delta_time = (ticks - last_ticks) / 1000
+        # delta_time = (ticks - last_ticks) / 1000
         last_ticks = ticks
 
         time = start_time + pygame.mixer.music.get_pos() / 1000 + audio_time_offset
@@ -189,7 +192,7 @@ def main():
 
         # Compute next color values in place
 
-        next_grid *= dampen
+        next_grid *= dampen / np.exp2(features.energy)  # TODO verify that this looks good
         next_grid += color_grid
         for c in range(3):
             next_grid[:, :, c] *= energy_grid
@@ -280,7 +283,13 @@ def main():
 
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
-                show_letters = not show_letters
+                if event.button == 1:
+                    pos = pygame.mixer.music.get_pos() / 1000
+                    time_increase = 10
+                    pygame.mixer.music.set_pos(pos + start_time + time_increase)
+                    start_time += time_increase
+                elif event.button == 3:
+                    show_letters = not show_letters
             if event.type == pygame.QUIT:
                 running = False
 

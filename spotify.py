@@ -1,10 +1,9 @@
+import prelude
+
 import os
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import pandas as pd
-from dotenv import load_dotenv
-
-load_dotenv('.env.local')
 
 sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(
     client_id=os.getenv('SPOTIFY_ID'),
