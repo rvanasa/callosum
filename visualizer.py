@@ -14,110 +14,127 @@ from color_effects import choose_colors
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 import pygame
 
-# Fear not, for this will be properly commented.
-# Waiting to document until after we refactor for the Arduino serial interface.
-
 pixels_per_letter = 2
-
-music_name = 'Starman' if len(sys.argv) < 2 else sys.argv[1]
-start_time = 0 if len(sys.argv) < 3 else float(sys.argv[2])
 
 music_format = 'mp3'
 
 font_path = 'Arial Rounded MT Bold'  # TODO: custom font?
 
-with open('wordsearch.txt') as f:
-    lines = list(f.readlines())
-    wordsearch = np.array([list(line.strip().upper()) for line in lines if line and not line.startswith('#')])
-
-df_solutions = pd.read_csv('wordsearch_solution.csv').set_index('word')
-
-width, height = 600, 600
-x_count, y_count = 30, 30
-
-# x_count, y_count = np.array(wordsearch.shape)[::-1]
-grid_size = 600 / x_count
-# x_count, y_count = 20, 20
-# width, height = np.array([x_count, y_count]) * grid_size
+music_dir = 'music'
+cache_dir = f'music_cache'
 
 hop_length = 512
 # n_fft = 2048 * 4
 n_fft = 1024 * 4
 sr = 10000
 
-dampen = .01
-min_brightness = 0
-audio_time_offset = .09
-
-music_dir = 'music'
-cache_dir = f'music_cache'
-cache_subdir = f'{cache_dir}/{hop_length}_{n_fft}_{sr}'
-if not os.path.exists(cache_dir):
-    os.mkdir(cache_dir)
-if not os.path.exists(cache_subdir):
-    os.mkdir(cache_subdir)
-
-music_path = f'{music_dir}/{music_name}.{music_format}'
-spectrogram_path = f'{cache_subdir}/{music_name}.npy'
-if os.path.exists(spectrogram_path):
-    spectrogram = np.load(spectrogram_path)
-else:
-    print('Loading music...')
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        data, sr = librosa.load(music_path, sr=sr)  # , duration=30
-
-    print('Computing STFT...')
-    stft = np.abs(librosa.stft(data, hop_length=hop_length, n_fft=n_fft))
-
-    print('Computing spectrogram...')
-    spectrogram = librosa.amplitude_to_db(stft, ref=np.max)
-    np.save(spectrogram_path, spectrogram)
-
-df_features = pd.read_csv('music_features.csv').set_index('name')
-features = df_features.loc[music_name if music_name in df_features.index else 'default']
-
-lyrics_path = music_path.replace(f'.{music_format}', '.csv')
-lyrics = [row for _, row in pd.read_csv(lyrics_path).sort_values('start').iterrows()] \
-    if os.path.exists(lyrics_path) else []
-# lyrics = []
-
-frequencies = librosa.core.fft_frequencies(n_fft=n_fft)
-frequencies_index_ratio = len(frequencies) / frequencies[-1]
-
-times = librosa.core.frames_to_time(np.arange(spectrogram.shape[1]), sr=sr, hop_length=hop_length, n_fft=n_fft)
-time_index_ratio = len(times) / times[len(times) - 1]
-
-show_letters = False
-show_timestamp = False
+current_screen = None
 
 
-@jit(nopython=True)
-def get_decibel(target_time, freq):
-    return spectrogram[int(freq * frequencies_index_ratio), int(target_time * time_index_ratio)]
+def _music_path(music_name):
+    return f'{music_dir}/{music_name}.{music_format}'
 
 
-@jit(nopython=True)
-def get_spectrum(target_time):
-    return spectrogram[:, int(target_time * time_index_ratio) % spectrogram.shape[1]]
+def has_spectrogram(music_name):
+    return os.path.exists(f'{cache_dir}/{hop_length}_{n_fft}_{sr}/{music_name.replace("/", "_")}.npy')
 
 
-@jit(nopython=True)
-def get_decibel_range(spectrum, min_freq, max_freq, n_chunks=None):
-    start = int(min_freq * frequencies_index_ratio)
-    end = int(max_freq * frequencies_index_ratio)
-    values = spectrum[start:end]
-    if n_chunks is not None:
-        return np.array([t.mean() for t in np.array_split(values, n_chunks)])
-    return values
+def load_spectrogram(music_name):
+    cache_subdir = f'{cache_dir}/{hop_length}_{n_fft}_{sr}'
+    if not os.path.exists(cache_dir):
+        os.mkdir(cache_dir)
+    if not os.path.exists(cache_subdir):
+        os.mkdir(cache_subdir)
+
+    music_path = _music_path(music_name)
+    spectrogram_path = f'{cache_subdir}/{music_name.replace("/", "_")}.npy'
+    if os.path.exists(spectrogram_path):
+        spectrogram = np.load(spectrogram_path)
+    else:
+        print('Loading music...')
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            data, _ = librosa.load(music_path, sr=sr)  # , duration=30
+
+        print('Computing STFT...')
+        stft = np.abs(librosa.stft(data, hop_length=hop_length, n_fft=n_fft))
+
+        print('Computing spectrogram...')
+        spectrogram = librosa.amplitude_to_db(stft, ref=np.max)
+        np.save(spectrogram_path, spectrogram)
+
+    return spectrogram
 
 
-def main():
-    global show_letters, start_time
+def start_visualizer(music_name, start_time=0):
+    global current_screen
+    if not music_name or music_name == 'default':
+        return end_visualizer()
+    if current_screen:
+        end_visualizer()  # Replace visualizer
+
+    # music_name = default_music_name# if len(sys.argv) < 2 else sys.argv[1]
+    # start_time = default_start_time# if len(sys.argv) < 3 else float(sys.argv[2])
+
+    with open('wordsearch.txt') as f:
+        lines = list(f.readlines())
+        wordsearch = np.array([list(line.strip().upper()) for line in lines if line and not line.startswith('#')])
+
+    df_solutions = pd.read_csv('wordsearch_solution.csv').set_index('word')
+
+    width, height = 600, 600
+    x_count, y_count = 30, 30
+
+    # x_count, y_count = np.array(wordsearch.shape)[::-1]
+    grid_size = 600 / x_count
+    # x_count, y_count = 20, 20
+    # width, height = np.array([x_count, y_count]) * grid_size
+
+    dampen = .01
+    min_brightness = 0
+    audio_time_offset = .09
+
+    spectrogram = load_spectrogram(music_name)
+
+    df_features = pd.read_csv('music_features.csv').set_index('name')
+    features = df_features.loc[music_name if music_name in df_features.index else 'default']
+
+    lyrics_path = f'{music_dir}/{music_name}.csv'
+    lyrics = [row for _, row in pd.read_csv(lyrics_path).sort_values('start').iterrows()] \
+        if os.path.exists(lyrics_path) else []
+    # lyrics = []
+
+    frequencies = librosa.core.fft_frequencies(n_fft=n_fft)
+    frequencies_index_ratio = len(frequencies) / frequencies[-1]
+
+    times = librosa.core.frames_to_time(np.arange(spectrogram.shape[1]), sr=sr, hop_length=hop_length, n_fft=n_fft)
+    time_index_ratio = len(times) / times[len(times) - 1]
+
+    show_letters = False
+    show_timestamp = False
+
+    @jit(nopython=True)
+    def get_decibel(target_time, freq):
+        return spectrogram[int(freq * frequencies_index_ratio), int(target_time * time_index_ratio)]
+
+    @jit(nopython=True)
+    def get_spectrum(target_time):
+        return spectrogram[:, int(target_time * time_index_ratio) % spectrogram.shape[1]]
+
+    @jit(nopython=True)
+    def get_decibel_range(spectrum, min_freq, max_freq, n_chunks=None):
+        start = int(min_freq * frequencies_index_ratio)
+        end = int(max_freq * frequencies_index_ratio)
+        values = spectrum[start:end]
+        if n_chunks is not None:
+            return np.array([t.mean() for t in np.array_split(values, n_chunks)])
+        return values
+
     pygame.init()
     pygame.display.set_icon(pygame.image.load('assets/icon.png'))
     pygame.display.set_caption(f'C A L L O S U M  |  {features.artist} - {features.song}')
     screen = pygame.display.set_mode([width, height])
+    current_screen = screen
     time_font = pygame.font.SysFont(font_path, 24)  ####
 
     ws_size = 48
@@ -149,7 +166,7 @@ def main():
     time_rect = pygame.Rect(0, 0, grid_width * 3, grid_height * 2)
 
     print('Starting music...')
-    pygame.mixer.music.load(music_path)
+    pygame.mixer.music.load(_music_path(music_name))
     pygame.mixer.music.play(loops=3, start=start_time)
 
     color_grid = np.ones((x_count, y_count, 3), dtype=float)
@@ -296,5 +313,13 @@ def main():
     pygame.quit()
 
 
+def end_visualizer():
+    global current_screen
+    if current_screen is not None:
+        current_screen = None
+        pygame.quit()
+
+
 if __name__ == '__main__':
-    main()
+    # Play a specific song
+    start_visualizer('spotify/552' if len(sys.argv) < 2 else sys.argv[1], 0)
