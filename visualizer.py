@@ -20,13 +20,14 @@ music_format = 'mp3'
 
 font_path = 'Arial Rounded MT Bold'  # TODO: custom font?
 
-music_dir = 'music'
-cache_dir = f'music_cache'
-
 hop_length = 512
 # n_fft = 2048 * 4
 n_fft = 1024 * 4
 sr = 10000
+
+music_dir = 'music'
+cache_dir = f'music_cache'
+cache_subdir = f'{cache_dir}/{hop_length}_{n_fft}_{sr}'
 
 current_screen = None
 
@@ -36,11 +37,10 @@ def _music_path(music_name):
 
 
 def has_spectrogram(music_name):
-    return os.path.exists(f'{cache_dir}/{hop_length}_{n_fft}_{sr}/{music_name.replace("/", "_")}.npy')
+    return os.path.exists(f'{cache_subdir}/{music_name.replace("/", "_")}.npy')
 
 
 def load_spectrogram(music_name):
-    cache_subdir = f'{cache_dir}/{hop_length}_{n_fft}_{sr}'
     if not os.path.exists(cache_dir):
         os.mkdir(cache_dir)
     if not os.path.exists(cache_subdir):
@@ -113,19 +113,18 @@ def start_visualizer(music_name, start_time=0):
     show_letters = False
     show_timestamp = False
 
-    @jit(nopython=True)
     def get_decibel(target_time, freq):
         return spectrogram[int(freq * frequencies_index_ratio), int(target_time * time_index_ratio)]
 
-    @jit(nopython=True)
     def get_spectrum(target_time):
         return spectrogram[:, int(target_time * time_index_ratio) % spectrogram.shape[1]]
 
-    @jit(nopython=True)
     def get_decibel_range(spectrum, min_freq, max_freq, n_chunks=None):
         start = int(min_freq * frequencies_index_ratio)
         end = int(max_freq * frequencies_index_ratio)
-        values = spectrum[start:end]
+        # every_nth_sample = 2
+        every_nth_sample = 10
+        values = spectrum[start:end:every_nth_sample]
         if n_chunks is not None:
             return np.array([t.mean() for t in np.array_split(values, n_chunks)])
         return values
@@ -190,7 +189,11 @@ def start_visualizer(music_name, start_time=0):
         spectrum = get_spectrum(time)
         spectrum = spectrum - np.min(spectrum)  ########
 
-        choose_colors(color_grid, xis, yis, xcs, ycs, angles, radii, spectrum, get_decibel_range, features)
+        choose_colors(music_name, color_grid, xis, yis, xcs, ycs, angles, radii, spectrum, get_decibel_range, features)
+
+        if music_name in ['Ukraine', 'Cossack', 'Bayraktar']:
+            color_grid[:, :, 1] = color_grid[:, :, 0]
+            color_grid[:, :, 2] = color_grid[:, :, 0]
 
         # color_grid[yi, xi] = colorsys.hsv_to_rgb(hue, sat, val)
         # energy_grid[yi, xi] = 1  # + radii_center[i, j]
@@ -322,4 +325,4 @@ def end_visualizer():
 
 if __name__ == '__main__':
     # Play a specific song
-    start_visualizer('spotify/552' if len(sys.argv) < 2 else sys.argv[1], 0)
+    start_visualizer('Bayraktar' if len(sys.argv) < 2 else sys.argv[1], 0)

@@ -27,7 +27,7 @@ df = df[df.genre != 'Children\'s Music']
 keys = ['danceability', 'energy', 'liveness', 'valence']
 df = df[['genre', 'artist_name', 'track_name', 'popularity', *keys]].copy()
 df = df.sort_values('popularity', ascending=False)
-df.drop_duplicates(['artist_name', 'track_name', *keys], keep='first', inplace=True)
+df.drop_duplicates(['artist_name', 'track_name'], keep='first', inplace=True)
 df.liveness = np.log(df.liveness)
 
 for key in keys:
@@ -59,7 +59,6 @@ if __name__ == '__main__':
                         'outtmpl': download_file,
                     }) as dl:
                         df_rel = df[(df.artist_name == artist) & (df.track_name == song)]
-                        assert len(df_rel) == 1, f'Relevant options: {df_rel[["genre", "track_name", "artist_name"]]}'
                         row = df_rel.iloc[0]
 
                         info = dl.extract_info(url, download=False)

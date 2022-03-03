@@ -13,13 +13,18 @@ n_radial_bands = 40
 band_offset_scale = 5
 band_offset_rate = .5
 
+special_bands = {
+    'Cossack': 7,
+    'Bayraktar': 12,
+}
 
-def choose_colors(color_grid, xis, yis, xcs, ycs, angles, radii, spectrum, get_decibel_range, features):
+
+def choose_colors(music_name, color_grid, xis, yis, xcs, ycs, angles, radii, spectrum, get_decibel_range, features):
     global last_freqs, offset
     # last_freqs = _globals['last_freqs']
     # offset = _globals['offset']
 
-    f_bands = int(n_radial_bands + band_offset_scale * np.sin(offset * band_offset_rate))
+    f_bands = special_bands.get(music_name, int(n_radial_bands + band_offset_scale * np.sin(offset * band_offset_rate)))
     freqs = get_decibel_range(spectrum, min_frequency, max_frequency, f_bands)
 
     if last_freqs is not None:
@@ -29,8 +34,10 @@ def choose_colors(color_grid, xis, yis, xcs, ycs, angles, radii, spectrum, get_d
             freqs /= m
 
         offset += max(0, np.mean(freqs) - np.mean(last_freqs)) * offset_rate * max(features.danceability * 10, 0)
-        # offset -= abs(features.danceability) * offset_rate * .2  #####
+    # offset -= abs(features.danceability) * offset_rate * .2  #####
     last_freqs = freqs
+
+    spokes = min(6, int(max(0, 1 + features.energy * 5))) if music_name != 'Bayraktar' else 8
 
     # Optimized parameters
     A = .8 + np.cos(offset * 1.5) * .2
@@ -38,15 +45,13 @@ def choose_colors(color_grid, xis, yis, xcs, ycs, angles, radii, spectrum, get_d
     C = np.sin(offset * 5)
 
     for xi, yi, angle, r in zip(xis, yis, angles, radii):
-        color_grid[xi, yi] = choose_color(angle, r, freqs, features, A, B, C)
+        color_grid[xi, yi] = choose_color(spokes, angle, r, freqs, features, A, B, C)
 
     color_grid **= (2 + features.liveness * .5)  ###
 
 
-def choose_color(angle, r, freqs, features, A, B, C):
+def choose_color(spokes, angle, r, freqs, features, A, B, C):
     # offset = _globals['offset']  #####
-
-    spokes = min(6, int(max(0, 1 + features.energy * 5)))
 
     r += np.sin((angle * spokes + offset * 5) * 2 * np.pi) * .2 * A  ####
 
