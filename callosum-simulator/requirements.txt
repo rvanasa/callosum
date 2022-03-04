@@ -10,11 +10,10 @@ spotipy
 youtube_dl
 pydub
 lyricsgenius
-# ffmpeg-python
-# python-socketio
 nltk
 eventlet
 flask
 flask-cors
 flask-socketio
 tqdm
+pyserial

@@ -34,14 +34,18 @@ if __name__ == '__main__':
                     lyric_result = df_results.iloc[0]
                     # lyric_result.to_dict()
 
+                    title = lyric_result.full_title
                     lyrics = lg.lyrics(lyric_result['id']) or ''
                     lyrics = lyrics.encode('utf-8').decode('utf-8')  # Convert to UTF-8
                 else:
+                    title = ''
                     lyrics = ''
 
                 with open(output_file, 'w+', encoding='utf-8') as f:
-                    f.write(f'{row.artist} - {row.song}')
-                    f.write('\n\n')
+                    # f.write(f'{row.artist} - {row.song}')
+                    if title:
+                        f.write(title)
+                        f.write('\n\n')
                     f.write(lyrics)
 
                 time.sleep(10)  ###

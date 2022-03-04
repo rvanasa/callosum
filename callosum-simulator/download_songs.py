@@ -1,4 +1,5 @@
 import prelude
+from visualizer import load_spectrogram
 
 from pydub import AudioSegment
 import numpy as np
@@ -36,10 +37,10 @@ for key in keys:
 if __name__ == '__main__':
 
     while True:
-        try:
-            groups = df.sort_values('popularity', ascending=False).drop_duplicates(['artist_name']).groupby('genre')
-            for genre, g in groups:
-                for key, row in g[:15].iterrows():
+        groups = df.sort_values('popularity', ascending=False).drop_duplicates(['artist_name']).groupby('genre')
+        for genre, g in groups:
+            for key, row in g[:40].iterrows():
+                try:
                     name = f'spotify/{key}'
                     genre = row.genre
                     artist = row.artist_name
@@ -91,10 +92,12 @@ if __name__ == '__main__':
                         ])
                         df_features.to_csv('music_features.csv', index=False)
 
-                    # time.sleep(5)
+                        load_spectrogram(name)  # Precompute spectrogram
 
-        except Exception as err:
-            print(err)
-        # time.sleep(60)
+                # time.sleep(5)
+
+                except Exception as err:
+                    print(err)
+                    time.sleep(60)
 
         break

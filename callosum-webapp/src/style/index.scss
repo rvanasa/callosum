@@ -1,0 +1,50 @@
+
+
+//$spacer: 1em;
+
+//$primary: #7D61C8;
+//$secondary: #ffffff;
+//$light: #f1f1f1;
+//$dark: #000000;
+
+@import "mixins/variables";
+
+@import "~bootstrap/scss/bootstrap";
+
+@import "mixins/scrollbar";
+
+html, body {
+  background: #000;
+  color: #EEE;
+  overflow-x: hidden;
+}
+
+.cursor-default {
+  cursor: default !important;
+}
+
+.clickable {
+  cursor: pointer;
+  //transition: .1s ease-out;
+  //transition-property: color, background, opacity;
+}
+
+//.clickable:hover {
+//  transition: .2s ease-out;
+//}
+
+.grabbable {
+  cursor: grabbing !important;
+}
+
+.clickable::selection, .grabbable.selection {
+  background: none;
+}
+
+.clickable, .noselect {
+  user-select: none;
+}
+
+::selection {
+  background: #AAA;
+}

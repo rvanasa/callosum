@@ -1,4 +1,6 @@
 import prelude
+from color_effects import choose_colors
+from utils import focus_window
 
 import sys
 import os
@@ -9,23 +11,23 @@ import itertools as it
 from numba import jit
 import warnings
 
-from color_effects import choose_colors
-
+os.environ['SDL_VIDEO_CENTERED'] = '1'
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 import pygame
 
-pixels_per_letter = 2
+squares_per_letter = 2
+show_lyrics = False
 
 music_format = 'mp3'
 
-font_path = 'Arial Rounded MT Bold'  # TODO: custom font?
+font_path = 'Arial Rounded MT Bold'
 
 hop_length = 512
-# n_fft = 2048 * 4
 n_fft = 1024 * 4
 sr = 10000
 
 music_dir = 'music'
+words_dir = f'{music_dir}/words'
 cache_dir = f'music_cache'
 cache_subdir = f'{cache_dir}/{hop_length}_{n_fft}_{sr}'
 
@@ -80,29 +82,30 @@ def start_visualizer(music_name, start_time=0):
         lines = list(f.readlines())
         wordsearch = np.array([list(line.strip().upper()) for line in lines if line and not line.startswith('#')])
 
-    df_solutions = pd.read_csv('wordsearch_solution.csv').set_index('word')
+    df_solutions = pd.read_csv('wordsearch_solutions.csv').set_index('word')
 
-    width, height = 600, 600
-    x_count, y_count = 30, 30
+    x_count, y_count = 21, 21
 
-    # x_count, y_count = np.array(wordsearch.shape)[::-1]
-    grid_size = 600 / x_count
-    # x_count, y_count = 20, 20
-    # width, height = np.array([x_count, y_count]) * grid_size
+    point_pixel_count = 2
+    point_spread = .4
+    points_per_square = 10
 
-    dampen = .01
+    cover_alpha = .2  ###
     min_brightness = 0
     audio_time_offset = .09
+
+    # bg_color = np.array([0, 0, 0], dtype=np.uint8)
 
     spectrogram = load_spectrogram(music_name)
 
     df_features = pd.read_csv('music_features.csv').set_index('name')
     features = df_features.loc[music_name if music_name in df_features.index else 'default']
 
-    lyrics_path = f'{music_dir}/{music_name}.csv'
-    lyrics = [row for _, row in pd.read_csv(lyrics_path).sort_values('start').iterrows()] \
-        if os.path.exists(lyrics_path) else []
-    # lyrics = []
+    lyrics_path = f'{words_dir}/{music_name}.csv'
+    lyrics = (
+        [row for _, row in pd.read_csv(lyrics_path).sort_values('start').iterrows()]
+        if show_lyrics and os.path.exists(lyrics_path) else []
+    )
 
     frequencies = librosa.core.fft_frequencies(n_fft=n_fft)
     frequencies_index_ratio = len(frequencies) / frequencies[-1]
@@ -110,7 +113,6 @@ def start_visualizer(music_name, start_time=0):
     times = librosa.core.frames_to_time(np.arange(spectrogram.shape[1]), sr=sr, hop_length=hop_length, n_fft=n_fft)
     time_index_ratio = len(times) / times[len(times) - 1]
 
-    show_letters = False
     show_timestamp = False
 
     def get_decibel(target_time, freq):
@@ -130,16 +132,23 @@ def start_visualizer(music_name, start_time=0):
         return values
 
     pygame.init()
+    pygame.mouse.set_visible(False)
     pygame.display.set_icon(pygame.image.load('assets/icon.png'))
-    pygame.display.set_caption(f'C A L L O S U M  |  {features.artist} - {features.song}')
-    screen = pygame.display.set_mode([width, height])
+    title = f'C A L L O S U M  |  {features.artist} - {features.song}'
+    pygame.display.set_caption(title)
+    info = pygame.display.Info()
+    width, height = int(info.current_w / point_pixel_count), int(info.current_h / point_pixel_count)
+    offset_x = max(0, int((width - height) / 2))
+    offset_y = max(0, int((height - width) / 2))
+    screen = pygame.display.set_mode((width, height), pygame.FULLSCREEN)
     current_screen = screen
     time_font = pygame.font.SysFont(font_path, 24)  ####
 
     ws_size = 48
     ws_font = pygame.font.SysFont(font_path, ws_size)  ####
 
-    grid_width, grid_height = width // x_count, height // y_count
+    grid_size = min(width // x_count, height // y_count)
+    grid_width, grid_height = (grid_size, grid_size)  ####
     grid_margin = 4
 
     xs, ys = np.arange(y_count), np.arange(x_count)
@@ -177,6 +186,12 @@ def start_visualizer(music_name, start_time=0):
 
     next_grid = np.zeros(color_grid.shape)
 
+    cover = pygame.Surface((width, height))
+    cover.set_alpha(int(cover_alpha * 255))
+    cover.fill((0, 0, 0))
+
+    focus_window(title)
+
     print('Starting visualizer...')
     last_ticks = pygame.time.get_ticks()
     running = True
@@ -187,45 +202,13 @@ def start_visualizer(music_name, start_time=0):
 
         time = start_time + pygame.mixer.music.get_pos() / 1000 + audio_time_offset
         spectrum = get_spectrum(time)
-        spectrum = spectrum - np.min(spectrum)  ########
+        spectrum -= np.min(spectrum)
 
         choose_colors(music_name, color_grid, xis, yis, xcs, ycs, angles, radii, spectrum, get_decibel_range, features)
 
         if music_name in ['Ukraine', 'Cossack', 'Bayraktar']:
             color_grid[:, :, 1] = color_grid[:, :, 0]
             color_grid[:, :, 2] = color_grid[:, :, 0]
-
-        # color_grid[yi, xi] = colorsys.hsv_to_rgb(hue, sat, val)
-        # energy_grid[yi, xi] = 1  # + radii_center[i, j]
-
-        # for y in ys:
-        #     yf = y / len(ys)
-        #     yc = yf * 2 - 1
-        #
-        #     fy = f[y]
-        #     # print(f_col)  ###
-        #     for theta, r in zip(thetas, radii):
-        #         xf = x / len(xs)
-        #         xc = xf * 2 - 1
-        #
-        #         r = np.hypot(xc, yc)
-
-        # Compute next color values in place
-
-        next_grid *= dampen / np.exp2(features.energy)  # TODO verify that this looks good
-        next_grid += color_grid
-        for c in range(3):
-            next_grid[:, :, c] *= energy_grid
-        next_grid -= np.min(next_grid)
-        next_grid /= max(1, np.max(next_grid))
-        next_grid *= 255 - min_brightness
-        next_grid += min_brightness
-        next_grid = next_grid
-
-        screen.fill((0, 0, 0))
-
-        # if show_text:
-        #     np.random.seed(0)  ####
 
         text = None
         solution = None
@@ -235,8 +218,34 @@ def start_visualizer(music_name, start_time=0):
                 text = row.text.upper()
                 if text in df_solutions.index:
                     solution = df_solutions.loc[text]
+                else:
+                    print('Unknown word:', text)
                 if time >= row.start + row.duration:
                     lyrics.pop(0)
+
+        show_letters = text is not None and solution is not None  #####
+
+        # Compute next color values in place
+
+        # next_grid *= dampen / np.exp2(features.energy)
+        # next_grid += color_grid
+        next_grid = color_grid
+        next_grid *= color_grid  # Square
+        for c in range(3):
+            next_grid[:, :, c] *= energy_grid
+        next_grid -= np.min(next_grid)
+        if show_letters:
+            next_grid += np.max(next_grid) * .2  ###
+        next_grid /= max(1, np.max(next_grid))
+        next_grid *= 255 - min_brightness
+        next_grid += min_brightness
+
+        byte_grid = next_grid.astype(np.uint8)
+
+        # screen.fill((0, 0, 0))
+        screen.blit(cover, (0, 0))
+
+        adjusted_point_spread = point_spread * np.exp2(features.liveness * .4)
 
         for y in ys:
             for x in xs:
@@ -247,7 +256,8 @@ def start_visualizer(music_name, start_time=0):
                     wordsearch[y, x]
                     if x < wordsearch.shape[0] and y < wordsearch.shape[1] else ''
                 )
-                xy_color = next_grid[x, y].astype(int)
+                xy_color = byte_grid[x, y]
+                index = 0
                 if show_letters:
                     # xy_color = next_grid[x * pixels_per_letter, y * pixels_per_letter].astype(int)  ##
                     if text is not None and solution is not None:
@@ -260,46 +270,26 @@ def start_visualizer(music_name, start_time=0):
                             xy_color = (0, 0, 0)
                     img = ws_font.render(letter, True, xy_color)
                     screen.blit(img, (
-                        col_xs[x] * pixels_per_letter + (grid_size * pixels_per_letter - img.get_width()) / 2,
-                        row_ys[y] * pixels_per_letter + (grid_size * pixels_per_letter - img.get_height()) / 2,
+                        col_xs[x] * squares_per_letter + (grid_width * squares_per_letter - img.get_width()) / 2,
+                        row_ys[y] * squares_per_letter + (grid_height * squares_per_letter - img.get_height()) / 2,
                     ))
                 else:
-                    screen.fill(xy_color, rectangles[x, y])
-
-        # screen.fill((0, 0, 0), time_rect)
+                    # screen.fill(xy_color / 4, rectangles[x, y])
+                    # for _ in range(int(xy_color.mean() / 64)):
+                    if xy_color.max() < 100:
+                        pass
+                    for _ in range(points_per_square):
+                        screen.set_at((
+                            int(offset_x + (x + .5 + np.random.randn() * adjusted_point_spread) * grid_width) % width,
+                            int(offset_y + (y + .5 + np.random.randn() * adjusted_point_spread) * grid_height) % height,
+                        ), xy_color)
+                        index += .2
 
         if show_timestamp:
             img = time_font.render(f'{round(time, 1)}', True, (255, 255, 255))
             screen.blit(img, (10, 10))
 
-        # if lyrics:
-        #     row = lyrics[0]
-        #     if time >= row.start:
-        #         screen_size = np.asarray((width, height)) - 5
-        #         text = row.text.upper()
-        #         if lyric_img is None:
-        #             font_size = 180
-        #             while lyric_img is None or np.any(np.asarray(lyric_img.get_size()) > screen_size):
-        #                 lyric_font = pygame.font.SysFont('C:\\Windows\\Fonts\\Arial.ttf', font_size)  ####
-        #                 font_size -= 4
-        #                 lyric_img = lyric_font.render(f'{text}', True, (0, 0, 0))
-        #
-        #         # img_bg = lyric_font.render(f'{text}', True, (0, 0, 0))
-        #         img_width, img_height = lyric_img.get_size()
-        #         img_x = (width - img_width) / 2
-        #         img_y = (height - img_height) / 2
-        #         # screen.blit(img_bg, (img_x + 2, img_y + 2))
-        #         screen.blit(lyric_img, (img_x, img_y))
-        #
-        #         if time >= row.start + row.duration:
-        #             lyric_img = None
-        #             lyrics.pop(0)
-
         pygame.display.flip()
-
-        # if i % 10 == 0:
-        #     pygame.image.save(screen, f'output/{}.jpg')
-        # i += 1
 
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -325,4 +315,4 @@ def end_visualizer():
 
 if __name__ == '__main__':
     # Play a specific song
-    start_visualizer('Bayraktar' if len(sys.argv) < 2 else sys.argv[1], 0)
+    start_visualizer('ViolinDubstep' if len(sys.argv) < 2 else sys.argv[1], 0)

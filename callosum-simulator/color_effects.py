@@ -9,7 +9,7 @@ offset_rate = .1
 
 min_frequency = 1000
 max_frequency = 8000
-n_radial_bands = 40
+n_radial_bands = 20
 band_offset_scale = 5
 band_offset_rate = .5
 
@@ -24,7 +24,8 @@ def choose_colors(music_name, color_grid, xis, yis, xcs, ycs, angles, radii, spe
     # last_freqs = _globals['last_freqs']
     # offset = _globals['offset']
 
-    f_bands = special_bands.get(music_name, int(n_radial_bands + band_offset_scale * np.sin(offset * band_offset_rate)))
+    f_bands = special_bands.get(music_name) or int(
+        n_radial_bands + band_offset_scale * np.sin(offset * band_offset_rate))
     freqs = get_decibel_range(spectrum, min_frequency, max_frequency, f_bands)
 
     if last_freqs is not None:
@@ -53,7 +54,9 @@ def choose_colors(music_name, color_grid, xis, yis, xcs, ycs, angles, radii, spe
 def choose_color(spokes, angle, r, freqs, features, A, B, C):
     # offset = _globals['offset']  #####
 
-    r += np.sin((angle * spokes + offset * 5) * 2 * np.pi) * .2 * A  ####
+    spoke_factor = np.sin((angle * spokes + offset * 5) * 2 * np.pi)
+
+    r += spoke_factor * .2 * A  ####
 
     # af = freqs[min(int(angle * len(freqs)), len(freqs) - 1)]
     rf = freqs[min(int(r * len(freqs)), len(freqs) - 1)]
@@ -61,7 +64,7 @@ def choose_color(spokes, angle, r, freqs, features, A, B, C):
     # yf = freqs[min(int(abs(y) * len(freqs)), len(freqs) - 1)]
 
     # hue = angle - (offset + r) * .2  ####
-    hue = (300 + np.clip(features.valence, -1, 1) * 120 + B * 20) / 360  ####
+    hue = (290 + np.clip(features.valence * 120 + B * 20, -120, 120)) / 360  ####
     sat = r * .75 + C * .1  # * (.75 + features.valence * 1)
     val = rf ** (2 + features.danceability * .5) + np.sin((angle * 3 + offset * 2) * 2 * np.pi) ** 2 * .1
 

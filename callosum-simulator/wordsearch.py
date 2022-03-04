@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-# https://github.com/James231/Wordsearch-Solver-Python/blob/master/wordsearch_solver.py
+# Derived from https://github.com/James231/Wordsearch-Solver-Python/blob/master/wordsearch_solver.py
 
 def find_word(wordsearch, word):
     start_pos = []
@@ -75,7 +75,7 @@ def main():
         print(word, pos, direction)
         data.append(dict(word=word, x=pos[0], y=pos[1], dx=direction[0], dy=direction[1]))
     df = pd.DataFrame(data)
-    df.to_csv('wordsearch_solution.csv', index=False)
+    df.to_csv('wordsearch_solutions.csv', index=False)
 
 
 if __name__ == '__main__':
