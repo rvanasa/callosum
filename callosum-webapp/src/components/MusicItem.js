@@ -4,8 +4,10 @@ import styled from 'styled-components';
 import {SelectionContext} from '../contexts/SelectionContext';
 import classNames from 'classnames';
 
-const Container = styled.h1`
-    font-weight: 300;
+const Container = styled.div`
+    font-family: Lato, sans-serif;
+    font-weight: 400;
+    font-style: normal;
     border-radius: 2px;
     background: #FFF2;
     cursor: pointer;

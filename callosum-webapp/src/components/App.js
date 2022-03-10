@@ -23,12 +23,13 @@ const shuffleAnimation = keyframes`
 `;
 
 const StyledHeader = styled.h1`
+    font-family: Futura, sans-serif;
     color: #AAA;
     text-align: center;
-    font-size: 108px;
+    font-size: 7rem;
     font-weight: 100;
     text-transform: uppercase;
-    letter-spacing: 12px;
+    letter-spacing: auto;
     user-select: none;
     cursor: pointer;
     animation: ${startAnimation} 1s forwards ease-out;
