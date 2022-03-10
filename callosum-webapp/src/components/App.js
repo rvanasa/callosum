@@ -26,7 +26,7 @@ const StyledHeader = styled.h1`
     font-family: Futura, Jost, sans-serif;
     color: #AAA;
     text-align: center;
-    font-size: 7rem;
+    font-size: 15rem;
     font-weight: 100;
     text-transform: uppercase;
     letter-spacing: 0;
@@ -103,14 +103,14 @@ export default function App() {
 
     return (
         <SelectionContext.Provider value={{selected, setSelected: select}}>
-            <div className="mx-2 mt-3 mt-md-4 mx-auto" style={{maxWidth: 596 /*TODO remove magic*/}}>
-                <div>
-                    <StyledHeader
-                        key={shuffleKey}
-                        className={classNames('mb-3 text-center', shuffleKey && 'shuffle')}
-                        onClick={e => selected && shuffleKey ? sortMusic() : shuffleMusic()}>
-                        Callosum
-                    </StyledHeader>
+            <div className="mx-2 mt-3 mt-md-4">
+                <StyledHeader
+                    key={shuffleKey}
+                    className={classNames('mb-3 text-center', shuffleKey && 'shuffle')}
+                    onClick={e => selected && shuffleKey ? sortMusic() : shuffleMusic()}>
+                    Callosum
+                </StyledHeader>
+                <div className="mx-auto" style={{maxWidth: 596 /*TODO remove magic*/}}>
                     <div className="py-2">
                         <input
                             type="text"
