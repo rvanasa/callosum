@@ -22,6 +22,7 @@ const shuffleAnimation = keyframes`
     }
 `;
 
+// Main header
 const StyledHeader = styled.h1`
     font-family: Futura, Jost, sans-serif;
     color: #AAA;
@@ -37,6 +38,18 @@ const StyledHeader = styled.h1`
     &.shuffle {
         animation: ${shuffleAnimation} 1s forwards ease-out;
     }
+`;
+
+// Everything below the header
+const StyledContent = styled.div`
+    margin: auto;
+    max-width: 60rem;
+`;
+
+// Scroll area for song options
+const StyledItemContainer = styled.div`
+    max-height: 30rem;
+    overflow-y: auto;
 `;
 
 export default function App() {
@@ -110,7 +123,7 @@ export default function App() {
                     onClick={e => selected && shuffleKey ? sortMusic() : shuffleMusic()}>
                     Callosum
                 </StyledHeader>
-                <div className="mx-auto" style={{maxWidth: 596 /*TODO remove magic*/}}>
+                <StyledContent>
                     <div className="py-2">
                         <input
                             type="text"
@@ -121,17 +134,16 @@ export default function App() {
                             onChange={e => setSearchText(e.target.value)}
                         />
                     </div>
-                    <div
+                    <StyledItemContainer
                         ref={ref => scrollRef = ref}
-                        className="pe-2"
-                        style={{maxHeight: 300, overflowY: 'auto'}}>
+                        className="pe-2">
                         {musicList
                             .filter(filterMusic)
                             .map(music => (
                                 <MusicItem key={music.name} music={music}/>
                             ))}
-                    </div>
-                </div>
+                    </StyledItemContainer>
+                </StyledContent>
             </div>
         </SelectionContext.Provider>
     );
