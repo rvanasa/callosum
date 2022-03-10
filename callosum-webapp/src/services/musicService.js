@@ -23,6 +23,28 @@ const musicListPromise = axios.get(`//${CONNECTION_HOST}/static/features.csv`)
                 // start: new Date(row.start),
                 // end: new Date(row.end),
             }));
+    })
+    .catch(err => {
+        console.error(err);
+        return [{
+            id: 0,
+            name: 'Test 123',
+            song: 'Test 123',
+            artist: 'Test Artist',
+            danceability: 0,
+            energy: 0,
+            liveness: 0,
+            valence: 0,
+        }, {
+            id: 0,
+            name: 'Test 456',
+            song: 'Test 456',
+            artist: 'Another Artist',
+            danceability: 0,
+            energy: 0,
+            liveness: 0,
+            valence: 0,
+        }];
     });
 
 export async function findMusicList() {
