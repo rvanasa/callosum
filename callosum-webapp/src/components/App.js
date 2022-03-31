@@ -25,7 +25,7 @@ const shuffleAnimation = keyframes`
 // Main header
 const StyledHeader = styled.h1`
     font-family: Futura, Jost, sans-serif;
-    color: #AAA;
+    color: #888;
     text-align: center;
     font-size: 8rem;
     font-weight: 100;
