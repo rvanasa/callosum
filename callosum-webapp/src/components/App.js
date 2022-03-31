@@ -120,7 +120,8 @@ export default function App() {
                 <StyledHeader
                     key={shuffleKey}
                     className={classNames('mb-3 text-center', shuffleKey && 'shuffle')}
-                    onClick={e => selected && shuffleKey ? sortMusic() : shuffleMusic()}>
+                    // onClick={() => selected && shuffleKey ? sortMusic() : shuffleMusic()}>
+                    onClick={() => shuffleMusic()}>
                     Callosum
                 </StyledHeader>
                 <StyledContent>
