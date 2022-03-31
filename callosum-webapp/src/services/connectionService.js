@@ -1,6 +1,8 @@
 import {io} from 'socket.io-client';
 
-export const CONNECTION_HOST = 'localhost:5000';
+const urlParams = new URLSearchParams(window.location.search); // TODO: refactor
+
+export const CONNECTION_HOST = `${urlParams.get('host') || 'localhost'}:${urlParams.get('port') || 5000}`;
 
 const client = io(CONNECTION_HOST);
 
