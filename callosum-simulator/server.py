@@ -73,7 +73,8 @@ if __name__ == '__main__':
     # df_features.to_csv('music_features.csv')
 
     # print(len(df_features[df_features.name == df_features.song]))  ###
-    # df_features = df_features[df_features.name != df_features.song]  ## TODO
+    # df_features = df_features[df_features['name'] != df_features.song]  ## TODO
+    # df_features = df_features[df_features.name.str.startswith('spotify/') | df_features.name.str.startswith('charts/')]  ## TODO
 
     df_features.drop_duplicates(['song', 'artist'], keep='first', inplace=True)
     df_features.to_csv('music_features_dedupe.csv')

@@ -21,7 +21,7 @@ os.environ['SDL_VIDEO_CENTERED'] = '1'
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 import pygame
 
-fullscreen = False
+fullscreen = True
 
 squares_per_letter = 2
 
@@ -93,7 +93,7 @@ def run_window():
     icon = pygame.image.load('assets/icon.png')
 
     pygame.init()
-    # pygame.mouse.set_visible(False)
+    pygame.mouse.set_visible(not fullscreen)
     pygame.display.set_icon(icon)
     pygame.display.set_caption(f'C A L L O S U M')
     info = pygame.display.Info()
@@ -124,12 +124,15 @@ def run_window():
     while True:
         if music_queue.empty():
             sleep(.1)
+            # screen.fill(0)
+            # pygame.display.flip()
             continue
 
         music_name, start_time = music_queue.get()
 
         screen.fill(0)
         # screen.blit(icon, (10, 10))
+        pygame.display.flip()
 
         print('::', music_name, start_time)  ###
 
@@ -146,8 +149,8 @@ def run_window():
 
         show_timestamp = False
 
-        def get_decibel(target_time, freq):
-            return spectrogram[int(freq * frequencies_index_ratio), int(target_time * time_index_ratio)]
+        # def get_decibel(target_time, freq):
+        #     return spectrogram[int(freq * frequencies_index_ratio), int(target_time * time_index_ratio)]
 
         def get_spectrum(target_time):
             return spectrogram[:, int(target_time * time_index_ratio) % spectrogram.shape[1]]
@@ -173,7 +176,7 @@ def run_window():
         # y_center = 2 * row_ys / height - 1
         # radius_grid = np.sqrt(x_center ** 2 + y_center ** 2)
 
-        next_grid = np.zeros(color_grid.shape)
+        # next_grid = np.zeros(color_grid.shape)
 
         cover = pygame.Surface((width, height))
         cover.set_alpha(int(cover_alpha * 255))
@@ -182,7 +185,7 @@ def run_window():
         # focus_window(title)
 
         print('Starting visualizer...')
-        last_ticks = pygame.time.get_ticks()
+        # last_ticks = pygame.time.get_ticks()
         running = True
         i = 0
         while running:
@@ -258,10 +261,13 @@ def run_window():
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
-                        pos = pygame.mixer.music.get_pos() / 1000
-                        time_increase = 10
-                        pygame.mixer.music.set_pos(pos + start_time + time_increase)
-                        start_time += time_increase
+                        try:
+                            pos = pygame.mixer.music.get_pos() / 1000
+                            time_increase = 10
+                            pygame.mixer.music.set_pos(pos + start_time + time_increase)
+                            start_time += time_increase
+                        except Exception as e:
+                            print(e)
                     elif event.button == 3:
                         show_letters = not show_letters
                 if event.type == pygame.QUIT:

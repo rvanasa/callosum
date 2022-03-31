@@ -14,7 +14,7 @@ const startAnimation = keyframes`
 
 const shuffleAnimation = keyframes`
     0% {
-        color: #FFF;
+        opacity: .5;
         transform: scale(1);
     }
     10% {
@@ -25,10 +25,11 @@ const shuffleAnimation = keyframes`
 // Main header
 const StyledHeader = styled.h1`
     font-family: Futura, Jost, sans-serif;
-    color: #888;
+    color: #EEE;
     text-align: center;
     font-size: 8rem;
-    font-weight: 100;
+    //font-weight: 100;
+    font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0;
     user-select: none;
@@ -48,14 +49,14 @@ const StyledContent = styled.div`
 
 // Scroll area for song options
 const StyledItemContainer = styled.div`
-    max-height: 30rem;
+    max-height: 24rem;
     overflow-y: auto;
 `;
 
 export default function App() {
     const [searchText, setSearchText] = useState('');
     const [musicList, setMusicList] = useState([]);
-    const [selected, setSelected] = useState(null);
+    const [selected, _setSelected] = useState(null);
     const [shuffleKey, setShuffleKey] = useState(0);
 
     useEffect(() => {
@@ -79,8 +80,8 @@ export default function App() {
         return parts.some(part => String(part ?? '').toLowerCase().includes(text));
     };
 
-    const select = selected => {
-        setSelected(selected);
+    const setSelected = selected => {
+        _setSelected(selected);
         setShuffleKey(Math.random());
     };
 
@@ -115,7 +116,7 @@ export default function App() {
     // };
 
     return (
-        <SelectionContext.Provider value={{selected, setSelected: select}}>
+        <SelectionContext.Provider value={{selected, setSelected}}>
             <div className="mx-2 mt-3 mt-md-4">
                 <StyledHeader
                     key={shuffleKey}

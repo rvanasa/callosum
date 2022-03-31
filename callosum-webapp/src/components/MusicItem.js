@@ -13,14 +13,14 @@ const Container = styled.div`
     cursor: pointer;
     user-select: none;
 
-    &:hover {
-        background: #FFF5;
-    }
+    //&:hover {
+    //    background: #FFF5;
+    //}
 
-    &:active {
-        color: #555;
-        background: #FFF;
-    }
+    //&:active {
+    //    color: #555;
+    //    background: #FFF;
+    //}
 
     &.selected {
         color: #000;
