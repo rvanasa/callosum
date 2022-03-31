@@ -11,13 +11,7 @@ sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(
 ))
 
 
-def get_features(name, genre, track_id):
-    # df_tracks = pd.DataFrame(sp.search('Conrad Sewell Hold Me Up Throttle', type='track')['tracks']['items'])
-    # df_tracks[:3]
-
-    # print(len(df_tracks))  ##
-
-    # track = df_tracks.iloc[0]
+def get_features(key, genre, track_id):
 
     track = pd.Series(sp.track(track_id))
 
@@ -35,7 +29,7 @@ def get_features(name, genre, track_id):
     features = pd.Series(all_features[0])
 
     row = pd.Series(dict(
-        name=name,
+        name=key,
         genre=genre,
         artist=artist,
         song=name,
