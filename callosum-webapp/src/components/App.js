@@ -49,7 +49,7 @@ const StyledContent = styled.div`
 
 // Scroll area for song options
 const StyledItemContainer = styled.div`
-    max-height: 24rem;
+    max-height: 26rem;
     overflow-y: auto;
 `;
 
