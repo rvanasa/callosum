@@ -27,7 +27,7 @@ const StyledHeader = styled.h1`
     font-family: Futura, Jost, sans-serif;
     color: #AAA;
     text-align: center;
-    font-size: 15rem;
+    font-size: 8rem;
     font-weight: 100;
     text-transform: uppercase;
     letter-spacing: 0;
@@ -90,29 +90,29 @@ export default function App() {
         setSearchText('');
     };
 
-    let scrollRef;
-    const sortMusic = () => {
-        const target = musicList.find(music => music.name === selected);
-        if(!target) {
-            return;
-        }
-        setShuffleKey(null);
-        setSearchText('');
-        setMusicList(musicList
-            .map(music => ({
-                ...music,
-                distance: /*Math.sqrt*/(
-                    (target.danceability - music.danceability) ** 2 +
-                    (target.energy - music.energy) ** 2 +
-                    (target.liveness - music.liveness) ** 2 +
-                    (target.valence - music.valence) ** 2
-                ),
-            }))
-            .sort((a, b) => a.distance - b.distance));
-        if(scrollRef) {
-            scrollRef.scrollTop = 0;
-        }
-    };
+    // let scrollRef;
+    // const sortMusic = () => {
+    //     const target = musicList.find(music => music.name === selected);
+    //     if(!target) {
+    //         return;
+    //     }
+    //     setShuffleKey(null);
+    //     setSearchText('');
+    //     setMusicList(musicList
+    //         .map(music => ({
+    //             ...music,
+    //             distance: /*Math.sqrt*/(
+    //                 (target.danceability - music.danceability) ** 2 +
+    //                 (target.energy - music.energy) ** 2 +
+    //                 (target.liveness - music.liveness) ** 2 +
+    //                 (target.valence - music.valence) ** 2
+    //             ),
+    //         }))
+    //         .sort((a, b) => a.distance - b.distance));
+    //     if(scrollRef) {
+    //         scrollRef.scrollTop = 0;
+    //     }
+    // };
 
     return (
         <SelectionContext.Provider value={{selected, setSelected: select}}>
@@ -136,7 +136,7 @@ export default function App() {
                         />
                     </div>
                     <StyledItemContainer
-                        ref={ref => scrollRef = ref}
+                        // ref={ref => scrollRef = ref}
                         className="pe-2">
                         {musicList
                             .filter(filterMusic)
