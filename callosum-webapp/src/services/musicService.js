@@ -1,9 +1,10 @@
 import axios from 'axios';
-import {CONNECTION_URI, sendMessage} from './connectionService';
+import {sendMessage} from './connectionService';
 // noinspection ES6CheckImport
 import {parse} from 'papaparse';
 
-const musicListPromise = axios.get(`//${CONNECTION_URI}/static/features.csv`)
+// const musicListPromise = axios.get(`//${CONNECTION_URI}/static/features.csv`)
+const musicListPromise = axios.get(`data/features.csv`)
     .then(async response => {
         const result = await new Promise((complete, error) => {
             parse(response.data, {

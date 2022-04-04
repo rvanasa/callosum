@@ -12,8 +12,10 @@ pydub
 lyricsgenius
 nltk
 eventlet
-flask
-flask-cors
-flask-socketio
+# flask
+# flask-cors
+# flask-socketio
+websocket-client
+python-socketio[client]
 tqdm
 pyserial
