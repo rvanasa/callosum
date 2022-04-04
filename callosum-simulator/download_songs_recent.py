@@ -18,7 +18,7 @@ def standardize(x):
 
 
 # https://spotifycharts.com/regional/us/daily/latest
-df_charts = pd.read_csv('data/regional-global-weekly-latest.csv', skiprows=1)
+df_charts = pd.read_csv('data/regional-us-daily-latest.csv', skiprows=1)
 df_charts['track_id'] = df_charts.URL.str[31:]
 df_charts.set_index('track_id', inplace=True)
 

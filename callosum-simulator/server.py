@@ -20,14 +20,17 @@ def on_connect():
 
 @sio.on('msg')
 def on_msg(sid, data):
-    print('Message:', data)
-    if not isinstance(data, dict):
-        return
+    try:
+        print('Message:', data)
+        if not isinstance(data, dict):
+            return
 
-    if data.get('type') == 'select':
-        name = data.get('name')
-        print(name)
-        start_visualizer(name)
+        if data.get('type') == 'select':
+            name = data.get('name')
+            print(name)
+            start_visualizer(name)
+    except Exception as err:
+        print(err)
 
 
 @sio.on('*')
@@ -55,6 +58,6 @@ if __name__ == '__main__':
     df_features.drop_duplicates(['song', 'artist'], keep='first', inplace=True)
     df_features.to_csv('../callosum-webapp/public/data/features.csv', index=False)
 
-    # request_visualizer_window()
+    request_visualizer_window()
 
     sio.connect(host)

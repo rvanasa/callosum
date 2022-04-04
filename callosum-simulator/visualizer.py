@@ -138,7 +138,7 @@ def run_window():
 
         spectrogram = load_spectrogram(music_name)
 
-        df_features = pd.read_csv('music_features.csv').set_index('name')
+        df_features = pd.read_csv('music_features.csv').drop_duplicates('name').set_index('name')
         features = df_features.loc[music_name if music_name in df_features.index else 'default']
 
         frequencies = librosa.core.fft_frequencies(n_fft=n_fft)
