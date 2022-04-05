@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "https://ryanvandersmith.com/callosum/static/css/main.7615490f.chunk.css",
-    "main.js": "https://ryanvandersmith.com/callosum/static/js/main.9b143585.chunk.js",
-    "main.js.map": "https://ryanvandersmith.com/callosum/static/js/main.9b143585.chunk.js.map",
+    "main.js": "https://ryanvandersmith.com/callosum/static/js/main.063622cb.chunk.js",
+    "main.js.map": "https://ryanvandersmith.com/callosum/static/js/main.063622cb.chunk.js.map",
     "runtime-main.js": "https://ryanvandersmith.com/callosum/static/js/runtime-main.f633c46c.js",
     "runtime-main.js.map": "https://ryanvandersmith.com/callosum/static/js/runtime-main.f633c46c.js.map",
     "static/js/2.ae8c70d9.chunk.js": "https://ryanvandersmith.com/callosum/static/js/2.ae8c70d9.chunk.js",
@@ -17,6 +17,6 @@
     "static/js/runtime-main.f633c46c.js",
     "static/js/2.ae8c70d9.chunk.js",
     "static/css/main.7615490f.chunk.css",
-    "static/js/main.9b143585.chunk.js"
+    "static/js/main.063622cb.chunk.js"
   ]
 }
