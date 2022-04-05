@@ -82,7 +82,7 @@ export default function App() {
 
     const setSelected = selected => {
         _setSelected(selected);
-        setShuffleKey(Math.random());
+        // setShuffleKey(Math.random());
     };
 
     const shuffleMusic = () => {
