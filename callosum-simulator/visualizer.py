@@ -21,7 +21,7 @@ os.environ['SDL_VIDEO_CENTERED'] = '1'
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 import pygame
 
-fullscreen = False
+fullscreen = True
 
 squares_per_letter = 2
 
@@ -272,6 +272,8 @@ def run_window():
                         show_letters = not show_letters
                 if event.type == pygame.QUIT:
                     running = False
+                    pygame.quit()
+                    exit(0)
 
 
 _thread = None

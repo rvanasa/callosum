@@ -59,6 +59,6 @@ if __name__ == '__main__':
     df_features.drop_duplicates(['song', 'artist'], keep='first', inplace=True)
     df_features.to_csv('../callosum-webapp/public/data/features.csv', index=False)
 
-    request_visualizer_window()
+    # request_visualizer_window()
 
     sio.connect(host)
