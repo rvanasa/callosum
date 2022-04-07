@@ -86,7 +86,7 @@ export default function App() {
     };
 
     const shuffleMusic = () => {
-        setMusicList(shuffle(musicList));
+        setMusicList(shuffle([...musicList]));
         setShuffleKey(Math.random());
         setSearchText('');
     };

@@ -55,6 +55,7 @@ if __name__ == '__main__':
     #         df_features.loc[i, 'name'] = f'charts/{results[0]["id"]}'
     # df_features.to_csv('music_features_fix.csv', index=False)
 
+    df_features.drop_duplicates(['name'], keep='first', inplace=True)
     df_features.drop_duplicates(['song', 'artist'], keep='first', inplace=True)
     df_features.to_csv('../callosum-webapp/public/data/features.csv', index=False)
 

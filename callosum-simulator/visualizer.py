@@ -21,7 +21,7 @@ os.environ['SDL_VIDEO_CENTERED'] = '1'
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 import pygame
 
-fullscreen = True
+fullscreen = False
 
 squares_per_letter = 2
 
