@@ -2,6 +2,8 @@
 .cache
 .env.local
 __pycache__
+/build
+/dist
 /venv
 /data
 /music

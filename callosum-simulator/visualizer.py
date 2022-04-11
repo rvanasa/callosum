@@ -21,7 +21,7 @@ os.environ['SDL_VIDEO_CENTERED'] = '1'
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 import pygame
 
-fullscreen = True
+fullscreen = False
 
 squares_per_letter = 2
 
@@ -98,6 +98,8 @@ def run_window():
     pygame.display.set_caption(f'C A L L O S U M')
     info = pygame.display.Info()
     width, height = int(info.current_w / point_pixel_count), int(info.current_h / point_pixel_count)
+    if not fullscreen:
+        width = height
     offset_x = max(0, int((width - height) / 2))
     offset_y = max(0, int((height - width) / 2))
     screen = pygame.display.set_mode((width, height), pygame.FULLSCREEN if fullscreen else 0)

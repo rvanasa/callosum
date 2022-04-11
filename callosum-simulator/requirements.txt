@@ -19,3 +19,4 @@ websocket-client
 python-socketio[client]
 tqdm
 pyserial
+pyinstaller
