@@ -21,7 +21,7 @@ os.environ['SDL_VIDEO_CENTERED'] = '1'
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 import pygame
 
-fullscreen = False
+fullscreen = True
 
 squares_per_letter = 2
 
@@ -45,7 +45,6 @@ point_spread = .4
 points_per_square = 10
 
 cover_alpha = .2  ###
-min_brightness = 0
 audio_time_offset = .09
 
 
@@ -99,6 +98,7 @@ def run_window():
     info = pygame.display.Info()
     width, height = int(info.current_w / point_pixel_count), int(info.current_h / point_pixel_count)
     if not fullscreen:
+        # height *= point_pixel_count
         width = height
     offset_x = max(0, int((width - height) / 2))
     offset_y = max(0, int((height - width) / 2))
@@ -227,8 +227,7 @@ def run_window():
             if show_letters:
                 next_grid += np.max(next_grid) * .2  ###
             next_grid /= max(1, np.max(next_grid))
-            next_grid *= 255 - min_brightness
-            next_grid += min_brightness
+            next_grid *= 255
 
             byte_grid = next_grid.astype(np.uint8)
 
@@ -245,7 +244,7 @@ def run_window():
                     index = 0
                     # screen.fill(xy_color / 4, rectangles[x, y])
                     # for _ in range(int(xy_color.mean() / 64)):
-                    if xy_color.max() < 100:
+                    if xy_color.max() < 220:
                         pass
                     for _ in range(points_per_square):
                         screen.set_at((

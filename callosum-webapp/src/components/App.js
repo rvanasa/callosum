@@ -24,6 +24,10 @@ const shuffleAnimation = keyframes`
 
 // Main header
 const StyledHeader = styled.h1`
+    @media (max-width: 768px) {
+        font-size: 4rem;
+    }
+
     font-family: Futura, Jost, sans-serif;
     color: #EEE;
     text-align: center;
