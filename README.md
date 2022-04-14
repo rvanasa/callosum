@@ -2,28 +2,20 @@
 
 #### Reese Turney & Ryan Vandersmith
 
-Discover why your brain loves the music you choose.
+> Discover why your brain loves the music you choose.
 
-## Research Notebooks
+CALLOSUM is an interactive audio-visual installation accompanied by a workbook designed to help you understand your unique musical taste.
 
-- [Feature visualization & normalization](https://colab.research.google.com/drive/1-VmrEH0rXGvLicN42oUaHNJ9iAtdiNvi?usp=sharing)
-- [Spotify & LyricsGenius pipeline](https://colab.research.google.com/drive/1t1VCc48UUFzdaarYhQ9UIRrVgQMS20PC?usp=sharing)
-  (requires permission)
+Most people are exposed to a wide variety of music. 
+Over time, we develop preferences for certain types of songs. Using the Spotify API, we set out to discover a way to visualize the features which characterize your favorite music.
 
-## Visualizer Screenshots
+### Why does your brain choose the music you love?
 
-### Disco:
+---
 
-![Disco](./docs/img/disco.png)
+## Components
 
-### Country:
-
-![Country](./docs/img/country.png)
-
-### Pop:
-
-![Pop](./docs/img/pop.png)
-
-### Lyrical word-search:
-
-![Lyrics](./docs/img/wordsearch.png)
+- [Web Application](./callosum-webapp) :: browse and select music for the installation.
+- [Python Visualizer](./callosum-simulator) :: simulate the installation on your own computer.
+- [Spotify Pipeline](./notebooks/callosum_spotify_visualization.ipynb) :: preprocess and extract features from the top music on Spotify
+- [Workbook](./) :: TODO: add link
