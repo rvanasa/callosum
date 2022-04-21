@@ -21,7 +21,7 @@ os.environ['SDL_VIDEO_CENTERED'] = '1'
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 import pygame
 
-fullscreen = True
+fullscreen = False
 
 squares_per_letter = 2
 
@@ -98,20 +98,16 @@ def run_window():
     info = pygame.display.Info()
     width, height = int(info.current_w / point_pixel_count), int(info.current_h / point_pixel_count)
     if not fullscreen:
-        # height *= point_pixel_count
         width = height
     offset_x = max(0, int((width - height) / 2))
     offset_y = max(0, int((height - width) / 2))
     screen = pygame.display.set_mode((width, height), pygame.FULLSCREEN if fullscreen else 0)
-    # current_screen = screen
     time_font = pygame.font.SysFont(font_path, 24)  ####
 
     grid_size = min(width // x_count, height // y_count)
     grid_width, grid_height = (grid_size, grid_size)  ####
-    grid_margin = 4
 
     xs, ys = np.arange(y_count), np.arange(x_count)
-    row_ys, col_xs = np.arange(y_count) * grid_height, np.arange(x_count) * grid_width
 
     xis, yis = zip(*it.product(xs, ys))
     xis = np.array(xis)
@@ -189,6 +185,7 @@ def run_window():
         print('Starting visualizer...')
         # last_ticks = pygame.time.get_ticks()
         running = True
+        paused = False
         i = 0
         while running:
             i += 1
@@ -210,11 +207,6 @@ def run_window():
                 color_grid[:, :, 1] = color_grid[:, :, 0]
                 color_grid[:, :, 2] = color_grid[:, :, 0]
 
-            text = None
-            solution = None
-
-            show_letters = text is not None and solution is not None  #####
-
             # Compute next color values in place
 
             # next_grid *= dampen / np.exp2(features.energy)
@@ -224,34 +216,33 @@ def run_window():
             for c in range(3):
                 next_grid[:, :, c] *= energy_grid
             next_grid -= np.min(next_grid)
-            if show_letters:
-                next_grid += np.max(next_grid) * .2  ###
             next_grid /= max(1, np.max(next_grid))
+            next_grid[next_grid > 1] = 1  #########
             next_grid *= 255
 
             byte_grid = next_grid.astype(np.uint8)
 
-            # screen.fill((0, 0, 0))
             screen.blit(cover, (0, 0))
 
-            adjusted_point_spread = point_spread * np.exp2(features.liveness * .4)
+            if not paused:
+                adjusted_point_spread = point_spread * np.exp2(features.liveness * .4)
 
-            for y in ys:
-                for x in xs:
-                    if show_timestamp and x < 1 and y < 1:
-                        continue
-                    xy_color = byte_grid[x, y]
-                    index = 0
-                    # screen.fill(xy_color / 4, rectangles[x, y])
-                    # for _ in range(int(xy_color.mean() / 64)):
-                    if xy_color.max() < 220:
-                        pass
-                    for _ in range(points_per_square):
-                        screen.set_at((
-                            int(offset_x + (x + .5 + np.random.randn() * adjusted_point_spread) * grid_width) % width,
-                            int(offset_y + (y + .5 + np.random.randn() * adjusted_point_spread) * grid_height) % height,
-                        ), xy_color)
-                        index += .2
+                for y in ys:
+                    for x in xs:
+                        if show_timestamp and x < 1 and y < 1:
+                            continue
+                        xy_color = byte_grid[x, y]
+                        index = 0
+                        # screen.fill(xy_color / 4, rectangles[x, y])
+                        # for _ in range(int(xy_color.mean() / 64)):
+                        if xy_color.max() < 220:
+                            pass
+                        for _ in range(points_per_square):
+                            screen.set_at((
+                                int(offset_x + (x + .5 + np.random.randn() * adjusted_point_spread) * grid_width) % width,
+                                int(offset_y + (y + .5 + np.random.randn() * adjusted_point_spread) * grid_height) % height,
+                            ), xy_color)
+                            index += .2
 
             if show_timestamp:
                 img = time_font.render(f'{round(time, 1)}', True, (255, 255, 255))
@@ -269,9 +260,14 @@ def run_window():
                             start_time += time_increase
                         except Exception as e:
                             print(e)
-                    elif event.button == 3:
-                        show_letters = not show_letters
-                if event.type == pygame.QUIT:
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        paused = not paused
+                        if paused:
+                            pygame.mixer.music.pause()
+                        else:
+                            pygame.mixer.music.unpause()
+                elif event.type == pygame.QUIT:
                     running = False
                     pygame.quit()
                     exit(0)
