@@ -1,8 +1,9 @@
-import queue
+import os
+
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
 import prelude
 from color_effects import choose_colors
-from utils import focus_window
 
 import sys
 import os
@@ -10,10 +11,9 @@ import librosa
 import numpy as np
 import pandas as pd
 import itertools as it
-from numba import jit
 import warnings
 
-from threading import Thread, Event, Lock
+from threading import Thread
 from queue import Queue
 from time import sleep
 
@@ -21,7 +21,7 @@ os.environ['SDL_VIDEO_CENTERED'] = '1'
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 import pygame
 
-fullscreen = False
+fullscreen = True
 
 squares_per_letter = 2
 
@@ -42,13 +42,10 @@ x_count, y_count = 21, 21
 
 point_pixel_count = 2
 point_spread = .4
-points_per_square = 10
+points_per_square = 7
 
-cover_alpha = .2  ###
+cover_alpha = .2
 audio_time_offset = .09
-
-
-# current_screen = None
 
 
 def _music_path(music_name):
@@ -73,7 +70,7 @@ def load_spectrogram(music_name):
         print('Loading music...')
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
-            data, _ = librosa.load(music_path, sr=sr)  # , duration=30
+            data, _ = librosa.load(music_path, sr=sr)
 
         print('Computing STFT...')
         stft = np.abs(librosa.stft(data, hop_length=hop_length, n_fft=n_fft))
@@ -99,13 +96,15 @@ def run_window():
     width, height = int(info.current_w / point_pixel_count), int(info.current_h / point_pixel_count)
     if not fullscreen:
         width = height
+    else:
+        height += 40  # Windows taskbar
     offset_x = max(0, int((width - height) / 2))
     offset_y = max(0, int((height - width) / 2))
     screen = pygame.display.set_mode((width, height), pygame.FULLSCREEN if fullscreen else 0)
-    time_font = pygame.font.SysFont(font_path, 24)  ####
+    time_font = pygame.font.SysFont(font_path, 24)
 
     grid_size = min(width // x_count, height // y_count)
-    grid_width, grid_height = (grid_size, grid_size)  ####
+    grid_width, grid_height = (grid_size, grid_size)
 
     xs, ys = np.arange(y_count), np.arange(x_count)
 
@@ -122,17 +121,14 @@ def run_window():
     while True:
         if music_queue.empty():
             sleep(.1)
-            # screen.fill(0)
-            # pygame.display.flip()
             continue
 
         music_name, start_time = music_queue.get()
 
         screen.fill(0)
-        # screen.blit(icon, (10, 10))
         pygame.display.flip()
 
-        print('::', music_name, start_time)  ###
+        print('::', music_name, start_time)
 
         spectrogram = load_spectrogram(music_name)
 
@@ -147,16 +143,12 @@ def run_window():
 
         show_timestamp = False
 
-        # def get_decibel(target_time, freq):
-        #     return spectrogram[int(freq * frequencies_index_ratio), int(target_time * time_index_ratio)]
-
         def get_spectrum(target_time):
             return spectrogram[:, int(target_time * time_index_ratio) % spectrogram.shape[1]]
 
         def get_decibel_range(spectrum, min_freq, max_freq, n_chunks=None):
             start = int(min_freq * frequencies_index_ratio)
             end = int(max_freq * frequencies_index_ratio)
-            # every_nth_sample = 2
             every_nth_sample = 10
             values = spectrum[start:end:every_nth_sample]
             if n_chunks is not None:
@@ -170,54 +162,33 @@ def run_window():
         color_grid = np.ones((x_count, y_count, 3), dtype=float)
         energy_grid = np.ones((x_count, y_count), dtype=float)
 
-        # x_center = 2 * col_xs / width - 1
-        # y_center = 2 * row_ys / height - 1
-        # radius_grid = np.sqrt(x_center ** 2 + y_center ** 2)
-
-        # next_grid = np.zeros(color_grid.shape)
-
         cover = pygame.Surface((width, height))
         cover.set_alpha(int(cover_alpha * 255))
         cover.fill((0, 0, 0))
 
-        # focus_window(title)
-
         print('Starting visualizer...')
-        # last_ticks = pygame.time.get_ticks()
         running = True
         paused = False
         i = 0
         while running:
             i += 1
-            if i % 5 == 0 and not music_queue.empty():  ###
+            if i % 5 == 0 and not music_queue.empty():
                 break
-
-            ticks = pygame.time.get_ticks()
-            # delta_time = (ticks - last_ticks) / 1000
-            last_ticks = ticks
 
             time = start_time + pygame.mixer.music.get_pos() / 1000 + audio_time_offset
             spectrum = get_spectrum(time)
             spectrum -= np.min(spectrum)
 
-            choose_colors(music_name, color_grid, xis, yis, xcs, ycs, angles, radii, spectrum, get_decibel_range,
-                          features)
+            choose_colors(music_name, color_grid, xis, yis, angles, radii, spectrum, get_decibel_range, features)
 
-            if music_name in ['Ukraine', 'Cossack', 'Bayraktar']:
-                color_grid[:, :, 1] = color_grid[:, :, 0]
-                color_grid[:, :, 2] = color_grid[:, :, 0]
-
-            # Compute next color values in place
-
-            # next_grid *= dampen / np.exp2(features.energy)
-            # next_grid += color_grid
             next_grid = color_grid
             next_grid *= color_grid  # Square
             for c in range(3):
                 next_grid[:, :, c] *= energy_grid
             next_grid -= np.min(next_grid)
             next_grid /= max(1, np.max(next_grid))
-            next_grid[next_grid > 1] = 1  #########
+            # next_grid *= 1.3  #######
+            # next_grid[next_grid > 1] = 1  #########
             next_grid *= 255
 
             byte_grid = next_grid.astype(np.uint8)
@@ -232,17 +203,15 @@ def run_window():
                         if show_timestamp and x < 1 and y < 1:
                             continue
                         xy_color = byte_grid[x, y]
-                        index = 0
-                        # screen.fill(xy_color / 4, rectangles[x, y])
-                        # for _ in range(int(xy_color.mean() / 64)):
                         if xy_color.max() < 220:
                             pass
                         for _ in range(points_per_square):
                             screen.set_at((
-                                int(offset_x + (x + .5 + np.random.randn() * adjusted_point_spread) * grid_width) % width,
-                                int(offset_y + (y + .5 + np.random.randn() * adjusted_point_spread) * grid_height) % height,
+                                int(offset_x + (
+                                        x + .5 + np.random.randn() * adjusted_point_spread) * grid_width) % width,
+                                int(offset_y + (
+                                        y + .5 + np.random.randn() * adjusted_point_spread) * grid_height) % height,
                             ), xy_color)
-                            index += .2
 
             if show_timestamp:
                 img = time_font.render(f'{round(time, 1)}', True, (255, 255, 255))
@@ -290,12 +259,8 @@ def start_visualizer(music_name, start_time=0):
 
 def end_visualizer():
     pygame.quit()
-    # global current_screen
-    # if current_screen is not None:
-    #     current_screen = None
-    #     pygame.quit()
 
 
 if __name__ == '__main__':
     # Play a specific song from command-line argument
-    start_visualizer('ViolinDubstep' if len(sys.argv) < 2 else sys.argv[1], 0)
+    start_visualizer('Bayraktar' if len(sys.argv) < 2 else sys.argv[1], 0)

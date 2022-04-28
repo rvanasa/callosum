@@ -166,7 +166,7 @@ def start_visualizer(music_name, start_time=0):
         spectrum = get_spectrum(time)
         spectrum -= np.min(spectrum)
 
-        choose_colors(music_name, color_grid, xis, yis, xcs, ycs, angles, radii, spectrum, get_decibel_range, features)
+        choose_colors(music_name, color_grid, xis, yis, angles, radii, spectrum, get_decibel_range, features)
 
         if music_name in ['Ukraine', 'Cossack', 'Bayraktar']:
             color_grid[:, :, 1] = color_grid[:, :, 0]
