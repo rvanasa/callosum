@@ -1,10 +1,6 @@
 import prelude
-from visualizer import request_visualizer_window, start_visualizer, end_visualizer
+from visualizer import start_visualizer
 
-import os
-import sys
-import subprocess
-import numpy as np
 import pandas as pd
 import socketio
 
@@ -42,23 +38,8 @@ process = None
 
 if __name__ == '__main__':
     df_features = pd.read_csv('music_features.csv')
-
-    # from spotify import sp, get_features
-    # for i, row in df_features.iterrows():
-    #     key = row['name']
-    #     if key == row.song:
-    #         results = sp.search(f'{row.artist} - {row.song}')['tracks']['items']
-    #         if not len(results):
-    #             print('No results:', f'{row.artist} - {row.song}')
-    #             continue
-    #         print(results[0]['id'])  ####
-    #         df_features.loc[i, 'name'] = f'charts/{results[0]["id"]}'
-    # df_features.to_csv('music_features_fix.csv', index=False)
-
     df_features.drop_duplicates(['name'], keep='first', inplace=True)
     df_features.drop_duplicates(['song', 'artist'], keep='first', inplace=True)
     df_features.to_csv('../callosum-webapp/public/data/features.csv', index=False)
-
-    # request_visualizer_window()
 
     sio.connect(host)
